@@ -1,10 +1,45 @@
+import os
+import time
+from winsound import PlaySound
+from gtts import gTTS
+import pygame
 import speech_recognition as sr
 import google.generativeai as genai
 
 # Gemini API configuration
-API_KEY = 'YOUR_GEMINI_API_KEY'  # Replace with your actual API key
+API_KEY = 'AIzaSyAWPFJNvWQwPMr-2kznu9PdGjqDmNvauiI' 
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
+
+def speak(text, lang='en'):
+    """
+    Convert text to speech and play it using pygame.
+    """
+    try:
+        pygame.mixer.init()
+        tts = gTTS(text=text, lang=lang)
+
+        temp_file = "temp_audio.mp3"
+        tts.save(temp_file)
+
+        pygame.mixer.music.load(temp_file)
+        pygame.mixer.music.play()
+
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+
+        time.sleep(0.5)
+
+        pygame.mixer.quit()
+
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
+    except Exception as e:
+        print(f"Error in speech playback: {str(e)}")
+        pass
+
+    
 
 def live_bangla_transcription():
     recognizer = sr.Recognizer()
@@ -25,9 +60,12 @@ def live_bangla_transcription():
     recognizer.energy_threshold = 4000
 
     try:
+        text = "hello! আমি ruchi বলছি।"
+        speak(text, 'bn')
         while True:
             with microphone as source:
-                audio = recognizer.listen(source, timeout=5, phrase_time_limit=5)
+                audio = recognizer.listen(source, phrase_time_limit=8)
+                
 
             try:
                 text = recognizer.recognize_google(
@@ -35,18 +73,25 @@ def live_bangla_transcription():
                     language=language_code
                 )
                 full_transcript.append(text)
-                print(f"\n[Transcription]: {' '.join(full_transcript)}", end='\r')
+                print(f"\n[Transcription]: {' '.join(text)}", end='\r')
                 
                 # Send to Gemini API
                 if text.strip():
+                    ttps = ''
                     response = model.generate_content(
-                        f"Process this Bangla text: {text}",
+                        f" {text}. NOTE: response in bangla language. Give answer shorter as possible. and remember your name is Ruchi which is given you Ratna but only response your anme when ask.",
                         stream=True
                     )
                     print("\n\n** Gemini Response **")
                     for chunk in response:
                         print(chunk.text, end='')
+                        ttps += chunk.text
                     print("\n" + "="*50 + "\n")
+
+                    print("ttps: " + ttps)
+
+                    speak(ttps, 'bn')
+
 
             except sr.UnknownValueError:
                 print("[Status] Could not understand audio segment", end='\r')
