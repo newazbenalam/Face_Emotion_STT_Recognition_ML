@@ -7,7 +7,7 @@ import speech_recognition as sr
 import google.generativeai as genai
 
 # Gemini API configuration
-API_KEY = 'AIzaSyAWPFJNvWQwPMr-2kznu9PdGjqDmNvauiI' 
+API_KEY = 'AIzaSyAWPFJNvWQwPMr-2kznu9PdGjqDmNvauiI'  # Replace with your actual API key
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
@@ -16,27 +16,37 @@ def speak(text, lang='en'):
     Convert text to speech and play it using pygame.
     """
     try:
+        # Initialize pygame mixer
         pygame.mixer.init()
+
+        # Generate speech
         tts = gTTS(text=text, lang=lang)
 
+        # Save to temporary file
         temp_file = "temp_audio.mp3"
         tts.save(temp_file)
 
+        # Load and play the audio
         pygame.mixer.music.load(temp_file)
         pygame.mixer.music.play()
 
+        # Wait for the audio to finish
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
 
+        # Add a small pause after speech
         time.sleep(0.5)
 
+        # Cleanup
         pygame.mixer.quit()
 
+        # Remove temporary file
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
     except Exception as e:
         print(f"Error in speech playback: {str(e)}")
+        # Continue without audio if there's an error
         pass
 
     
